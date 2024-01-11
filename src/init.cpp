@@ -3,8 +3,12 @@
 #include <esp_sleep.h>
 #include <esp_system.h>
 
-#define _TAG_INIT "Main"
+#define _TAG_INIT "INIT"
 
+/**
+ * @brief display a welcome banner
+ * @param  
+ */
 static void _banner(void)
 {
     printf("     ______  ______  ______     ______  ______  ______  \n"
@@ -13,8 +17,8 @@ static void _banner(void)
            "     \\ \\_____\\/\\_____\\ \\_\\      \\ \\_____\\ \\_____\\ \\ \\_\\ \n"
            "      \\/_____/\\/_____/\\/_/       \\/_____/\\/_____/  \\/_/ \n"
            "                                                        \n");
-    printf("ESP-IDF Version: %d.%d.%d\\n", ESP_IDF_VERSION_MAJOR, ESP_IDF_VERSION_MINOR, ESP_IDF_VERSION_PATCH);
-    printf("ESP-BOT Version: %s\\n", "0.0");
+    printf("ESP-IDF Version: v%d.%d.%d\n", ESP_IDF_VERSION_MAJOR, ESP_IDF_VERSION_MINOR, ESP_IDF_VERSION_PATCH);
+    printf("ESP-BOT Version: v%s\n", "0.0.1");
 }
 
 /* Public API */
