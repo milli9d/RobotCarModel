@@ -6,8 +6,17 @@
 #include <esp_sleep.h>
 #include <esp_system.h>
 
+#include <driver/i2c.h>
+
+#include "i2c_master_bus.hpp"
+
 #include "logging.h"
-LOG_TAG("INIT");
+LOG_TAG(INIT);
+
+#define MAIN_I2C_PORT I2C_NUM_1
+
+#define MAIN_I2C_MASTER_SDA_PIN GPIO_NUM_13 /*!< I2C master SDA pin number */
+#define MAIN_I2C_MASTER_SCL_PIN GPIO_NUM_14 /*!< I2C master SCL pin number */
 
 /**
  * @brief display a welcome banner
@@ -21,12 +30,11 @@ static void _banner(void)
            "     \\ \\_____\\/\\_____\\ \\_\\      \\ \\_____\\ \\_____\\ \\ \\_\\ \n"
            "      \\/_____/\\/_____/\\/_/       \\/_____/\\/_____/  \\/_/ \n"
            "                                                        \n");
-    LOG_INFO("ESP-IDF Version: v%d.%d.%d\n", ESP_IDF_VERSION_MAJOR, ESP_IDF_VERSION_MINOR, ESP_IDF_VERSION_PATCH);
-    LOG_INFO("ESP-BOT Version: v%s\n", "0.0.1");
+    LOG_INFO("ESP-IDF Version: v%d.%d.%d", ESP_IDF_VERSION_MAJOR, ESP_IDF_VERSION_MINOR, ESP_IDF_VERSION_PATCH);
+    LOG_INFO("ESP-BOT Version: v%s", "0.0.1");
 }
 
 /* Public API */
-
 /**
  * @brief
  * @param
@@ -34,4 +42,6 @@ static void _banner(void)
 void esp_bot_init(void)
 {
     _banner();
+    comm::i2c_master_bus i2c_main(MAIN_I2C_PORT, MAIN_I2C_MASTER_SDA_PIN, MAIN_I2C_MASTER_SCL_PIN);
+    i2c_main.scan_devices();
 }
