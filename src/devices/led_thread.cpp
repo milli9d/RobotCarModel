@@ -6,7 +6,7 @@
 #include "logging.h"
 LOG_TAG("STATUS_LED");
 
-#include "led.hpp"
+#include "devices/led.hpp"
 
 #define STATUS_LED GPIO_NUM_3
 

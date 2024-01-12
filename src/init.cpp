@@ -8,8 +8,8 @@
 
 #include <driver/i2c.h>
 
-#include "i2c_master_bus.hpp"
-#include "battery_mon.hpp"
+#include "comm/i2c_master_bus.hpp"
+#include "devices/battery_mon.hpp"
 
 #include "logging.h"
 LOG_TAG(INIT);

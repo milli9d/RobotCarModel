@@ -8,7 +8,7 @@
 
 #include <driver/i2c.h>
 
-#include "i2c_master_bus.hpp"
+#include "comm/i2c_master_bus.hpp"
 
 #include "logging.h"
 LOG_TAG(I2C_MASTER_BUS);
@@ -61,11 +61,11 @@ void i2c_master_bus::scan_devices(void)
         i2c_master_stop(cmd);
 
         /* get status of current address */
-        int ret = i2c_master_cmd_begin(_port, cmd, 10u / portTICK_PERIOD_MS);
+        int ret = i2c_master_cmd_begin(_port, cmd, pdMS_TO_TICKS(10u));
         if (ret == ESP_OK) {
-            printf("%3u ", i);
+            printf("0x%02X ", i);
         } else {
-            printf("--- ");
+            printf("---- ");
         }
 
         /* formatting */

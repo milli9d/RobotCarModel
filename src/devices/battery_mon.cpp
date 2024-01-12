@@ -13,7 +13,7 @@
 #include "logging.h"
 LOG_TAG(BATTERY_MON);
 
-#include "battery_mon.hpp"
+#include "devices/battery_mon.hpp"
 
 namespace devices {
 
