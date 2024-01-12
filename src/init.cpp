@@ -9,6 +9,7 @@
 #include <driver/i2c.h>
 
 #include "i2c_master_bus.hpp"
+#include "battery_mon.hpp"
 
 #include "logging.h"
 LOG_TAG(INIT);
@@ -17,6 +18,9 @@ LOG_TAG(INIT);
 
 #define MAIN_I2C_MASTER_SDA_PIN GPIO_NUM_13 /*!< I2C master SDA pin number */
 #define MAIN_I2C_MASTER_SCL_PIN GPIO_NUM_14 /*!< I2C master SCL pin number */
+
+static std::unique_ptr<devices::battery_monitor> batt_mon{};
+static std::unique_ptr<comm::i2c_master_bus> i2c_main{};
 
 /**
  * @brief display a welcome banner
@@ -42,6 +46,9 @@ static void _banner(void)
 void esp_bot_init(void)
 {
     _banner();
-    comm::i2c_master_bus i2c_main(MAIN_I2C_PORT, MAIN_I2C_MASTER_SDA_PIN, MAIN_I2C_MASTER_SCL_PIN);
-    i2c_main.scan_devices();
+
+    batt_mon = std::make_unique<devices::battery_monitor>(BATTERY_MON_ADC_CHANNEL);
+
+    i2c_main = std::make_unique<comm::i2c_master_bus>(MAIN_I2C_PORT, MAIN_I2C_MASTER_SDA_PIN, MAIN_I2C_MASTER_SCL_PIN);
+    i2c_main->scan_devices();
 }
