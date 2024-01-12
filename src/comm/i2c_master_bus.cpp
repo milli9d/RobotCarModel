@@ -24,9 +24,8 @@ namespace comm {
  * @param sda_pullup_en
  */
 i2c_master_bus::i2c_master_bus(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, bool scl_pullup_en, bool sda_pullup_en)
+    : _port(port)
 {
-    _port = port;
-
     _conf.mode = I2C_MODE_MASTER;
     _conf.sda_io_num = sda;
     _conf.scl_io_num = scl;
@@ -63,7 +62,7 @@ void i2c_master_bus::scan_devices(void)
         /* get status of current address */
         int ret = i2c_master_cmd_begin(_port, cmd, pdMS_TO_TICKS(10u));
         if (ret == ESP_OK) {
-            printf("0x%02X ", i);
+            printf("0x%02lX ", (unsigned long)i);
         } else {
             printf("---- ");
         }

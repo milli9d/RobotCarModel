@@ -69,7 +69,7 @@ class battery_monitor
     static void _run(battery_monitor* mon);
 
   public:
-    battery_monitor(adc_channel_t chan);
+    explicit battery_monitor(adc_channel_t chan);
 };
 
 } // namespace devices
