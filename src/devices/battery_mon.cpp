@@ -75,7 +75,7 @@ void battery_monitor::_run(battery_monitor* mon)
             LOG_INFO("Battery Monitor : %.3lf mV %.2f %%", mon->voltage(), mon->percent());
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(10u));
+        std::this_thread::sleep_for(std::chrono::seconds(BATTERY_MON_PERIOD_S));
     }
 }
 

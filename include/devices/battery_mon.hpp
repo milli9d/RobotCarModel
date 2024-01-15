@@ -14,6 +14,7 @@
 namespace devices {
 
 #define BATTERY_MON_VOLTAGE_THRESHOLD_MV 2100.0
+#define BATTERY_MON_PERIOD_S             120u
 
 #define BATTERY_MON_ADC_UNIT    ADC_UNIT_1
 #define BATTERY_MON_ADC_CHANNEL ADC_CHANNEL_4
