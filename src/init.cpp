@@ -24,6 +24,8 @@
 
 #include "devices/battery_mon.hpp"
 
+#include "utils/console.hpp"
+
 #include "logging.h"
 
 /* ========================================================================= */
@@ -41,39 +43,6 @@ LOG_TAG(INIT);
 /* ESP CONSOLE */
 /* ========================================================================= */
 
-namespace utils {
-
-class esp_bot_console
-{
-  private:
-    /* private data members */
-    std::unique_ptr<std::thread> _thread;
-
-    /* private API */
-    static void _run();
-
-  public:
-    esp_bot_console(void);
-};
-
-/**
- * @brief
- * @param
- */
-void esp_bot_console::_run(void)
-{
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100u));
-    }
-}
-
-/**
- * @brief
- * @param
- */
-esp_bot_console::esp_bot_console(void) {}
-
-} // namespace utils
 
 /* ========================================================================= */
 /* Static Members */
@@ -83,7 +52,7 @@ static void inline _wdt_init();
 static void inline _banner(void);
 
 static std::unique_ptr<devices::battery_monitor> batt_mon{};
-static std::unique_ptr<utils::esp_bot_console> console{};
+static std::unique_ptr<utils::esp_console> console{};
 
 static std::shared_ptr<comm::i2c_master_bus> i2c_main{};
 
@@ -165,7 +134,7 @@ void esp_bot_init(void)
     batt_mon = std::make_unique<devices::battery_monitor>(BATTERY_MON_ADC_CHANNEL);
 
     /* initialize battery monitor */
-    console = std::make_unique<utils::esp_bot_console>();
+    console = std::make_unique<utils::esp_console>();
 
     /* initialize i2c master bus */
     i2c_main = std::make_shared<comm::i2c_master_bus>(MAIN_I2C_PORT, MAIN_I2C_MASTER_SDA_PIN, MAIN_I2C_MASTER_SCL_PIN);
