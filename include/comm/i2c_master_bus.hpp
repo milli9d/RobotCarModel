@@ -1,3 +1,13 @@
+/**
+ * @file i2c_masterbus.hpp
+ *
+ * @brief I2C Master Bus instance
+ *
+ * This is an instance of the i2c_master_bus to be shared by
+ * all devices on the bus.
+ *
+ */
+
 #pragma once
 
 #include <iostream>
@@ -23,8 +33,15 @@ class i2c_master_bus
     i2c_config_t _conf{};
 
   public:
-    i2c_master_bus(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, bool scl_pullup_en = true, bool sda_pullup_en = true);
+    /* Constructors */
+    // i2c_master_bus();
+    i2c_master_bus(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, bool scl_pullup_en = true,
+                   bool sda_pullup_en = true);
+
+    /* Public API */
     void scan_devices(void);
+    bool ping_device(uint8_t addr, uint64_t timeout_ms);
+    const i2c_port_t& port();
 };
 
 } // namespace comm
