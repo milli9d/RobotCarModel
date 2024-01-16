@@ -32,8 +32,8 @@ namespace comm {
  * @param addr[in]          device addr
  * @param timeout_ms[in]    timeout in ms
  */
-i2c_slave_device::i2c_slave_device(const std::shared_ptr<comm::i2c_master_bus>& bus, std::string name, uint8_t addr,
-                                   uint8_t timeout_ms)
+i2c_slave_device::i2c_slave_device(const std::shared_ptr<comm::i2c_master_bus>& bus, const std::string& name,
+                                   const uint8_t& addr, const uint8_t& timeout_ms)
     : _bus(bus), _name(name), _addr(addr), _timeout_ms(timeout_ms)
 {
     if (ping()) {
@@ -105,12 +105,13 @@ bool i2c_slave_device::write_byte(const uint8_t& reg, const uint8_t& val)
     /* get status of current address */
     int ret = i2c_master_cmd_begin(_bus->port(), cmd, pdMS_TO_TICKS(_timeout_ms));
     if (ret != ESP_OK) {
-        LOG_ERR("Failed to write %s [0x%X] addr %d %d: %d", _name, _addr, reg, val, ret);
+        LOG_ERR("Failed to write %s [0x%X] addr %d %d: %d", _name.c_str(), _addr, reg, val, ret);
         return false;
     }
 
     /* free memory */
     i2c_cmd_link_delete(cmd);
+    LOG_INFO("Write %s [0x%X] addr Reg 0x%X  Val 0x%X:  RC 0x%X", _name.c_str(), _addr, reg, val, ret);
 
     return true;
 }

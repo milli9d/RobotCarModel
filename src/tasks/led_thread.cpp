@@ -6,10 +6,10 @@
 #include "esp_pthread.h"
 
 #include "logging.h"
-LOG_TAG("STATUS_LED");
+LOG_TAG(STATUS_LED);
 
 #include "devices/led.hpp"
-#include "led_thread.hpp"
+#include "tasks/led_thread.hpp"
 
 namespace tasks {
 

@@ -62,7 +62,9 @@ void i2c_master_bus::scan_devices(void)
         if (!count) {
             printf("     [ ");
         }
+
         printf("%4ld ", (unsigned long)i);
+
         /* formatting */
         if (++count == 8) {
             printf("]\n");
