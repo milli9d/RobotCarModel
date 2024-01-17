@@ -43,6 +43,10 @@ class i2c_slave_device
     bool ping(void);
     bool read_byte(const uint8_t& reg, uint8_t& val);
     bool write_byte(const uint8_t& reg, const uint8_t& val);
+
+    bool write_bytes(const uint8_t& reg, const uint8_t* val, size_t sz);
+    bool read_bytes(const uint8_t& reg, uint8_t* val, size_t sz);
+    
     bool write_byte_rb(const uint8_t& reg, const uint8_t& val, uint64_t rb_wait_ms);
 };
 

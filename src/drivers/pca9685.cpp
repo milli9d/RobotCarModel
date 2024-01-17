@@ -73,18 +73,11 @@ bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
 
     LOG_INFO("PWM On = %d, Off = %d , val = %d", t_on, t_off, (uint32_t)duty_cycle_percent);
 
-    uint8_t val = 0u;
-    _dev->write_byte(PCA9685_REG_LEDX_ON_L(pwm_port), (uint8_t)(t_on));
-    _dev->read_byte(PCA9685_REG_LEDX_ON_H(pwm_port), val);
-    _dev->write_byte(PCA9685_REG_LEDX_ON_H(pwm_port), (uint8_t)val | (t_on & 0x00FF0000 >> 8u));
-
-    val = 0u;
-    _dev->write_byte(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t)(t_off));
-    _dev->read_byte(PCA9685_REG_LEDX_OFF_H(pwm_port), val);
-    _dev->write_byte(PCA9685_REG_LEDX_OFF_H(pwm_port), (uint8_t)val | (t_off & 0x00FF0000 >> 8u));
+    _dev->write_bytes(PCA9685_REG_LEDX_ON_L(pwm_port), (uint8_t*)&t_on, sizeof(t_on));
+    _dev->write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
 
     /* restart PWM */
-    val = 0u;
+    uint8_t val = 0u;
     _dev->read_byte(PCA9685_REG_MODE_1, val);
     _dev->write_byte(PCA9685_REG_MODE_1, val | PCA9685_REG_MODE_1_RESTART(1u));
     return true;

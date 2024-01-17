@@ -61,16 +61,43 @@ bool i2c_slave_device::ping(void)
  */
 bool i2c_slave_device::read_byte(const uint8_t& reg, uint8_t& val)
 {
+    return read_bytes(reg, &val, 1u);
+}
+
+/**
+ * @brief Write a byte to this device
+ * @param reg[in]       reg address
+ * @param val[in]       memory to write from
+ * @return
+ */
+bool i2c_slave_device::write_byte(const uint8_t& reg, const uint8_t& val)
+{
+    return write_bytes(reg, &val, 1u);
+}
+
+/**
+ * @brief Read a byte from this device
+ * @param reg[in]       reg address
+ * @param val[out]      memory to read to
+ * @return
+ */
+bool i2c_slave_device::read_bytes(const uint8_t& reg, uint8_t* val, size_t sz)
+{
     /* enqueue a read for register addr */
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, _addr << 1u | I2C_MASTER_WRITE, I2C_MASTER_ACK);
     i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
+
     /* repeated start */
     i2c_master_start(cmd);
-    /* read byte */
     i2c_master_write_byte(cmd, _addr << 1u | I2C_MASTER_READ, I2C_MASTER_ACK);
-    i2c_master_read_byte(cmd, &val, I2C_MASTER_NACK);
+
+    /* read byte */
+    for (size_t i = 0u; i < s; i++) {
+        i2c_master_read_byte(cmd, &val[i], I2C_MASTER_NACK);
+    }
+
     i2c_master_stop(cmd);
 
     /* get status of current address */
@@ -92,26 +119,31 @@ bool i2c_slave_device::read_byte(const uint8_t& reg, uint8_t& val)
  * @param val[in]       memory to write from
  * @return
  */
-bool i2c_slave_device::write_byte(const uint8_t& reg, const uint8_t& val)
+bool i2c_slave_device::write_bytes(const uint8_t& reg, const uint8_t* val, size_t sz)
 {
     /* enqueue a read for register addr */
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, _addr << 1u | I2C_MASTER_WRITE, I2C_MASTER_ACK);
     i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
-    i2c_master_write_byte(cmd, val, I2C_MASTER_ACK);
+
+    /* enqueue bytes */
+    for (size_t i = 0u; i < sz; i++) {
+        i2c_master_write_byte(cmd, val[i], I2C_MASTER_ACK);
+        LOG_INFO("Write %s [0x%X] addr Reg 0x%X  Val 0x%X", _name.c_str(), _addr, reg + i, val[i]);
+    }
+
     i2c_master_stop(cmd);
 
     /* get status of current address */
     int ret = i2c_master_cmd_begin(_bus->port(), cmd, pdMS_TO_TICKS(_timeout_ms));
     if (ret != ESP_OK) {
-        LOG_ERR("Failed to write %s [0x%X] addr %d %d: %d", _name.c_str(), _addr, reg, val, ret);
+        LOG_ERR("Failed to write %s [0x%X] addr %d : %d", _name.c_str(), _addr, reg, ret);
         return false;
     }
 
     /* free memory */
     i2c_cmd_link_delete(cmd);
-    LOG_INFO("Write %s [0x%X] addr Reg 0x%X  Val 0x%X:  RC 0x%X", _name.c_str(), _addr, reg, val, ret);
 
     return true;
 }
