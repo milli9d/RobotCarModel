@@ -6,7 +6,8 @@
 #include <cmath>
 #include <chrono>
 
-#define PCA9685_DEFAULT_I2C_ADDR_7_BIT 0x5Fu
+#define PCA9685_DEFAULT_I2C_ADDR_7_BIT          0x5Fu
+#define PCA9685_DEFAULT_I2C_ADDR_SWRST_7_BIT    0x00u
 
 /* REG MODE 1 [0x00u] */
 #define PCA9685_REG_MODE_1             0x00u
