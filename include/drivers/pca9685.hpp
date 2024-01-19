@@ -18,7 +18,7 @@ namespace drivers {
 
 #define PCA9685_DEFAULT_I2C_TIMEOUT_MS 100u
 
-class pca9685 : public comm::i2c_slave_device
+class pca9685 : protected comm::i2c_slave_device
 {
   public:
     /* constructor */
@@ -27,6 +27,8 @@ class pca9685 : public comm::i2c_slave_device
     /* public API */
     void sleep(bool sleep);
     bool sleep(void);
+
+    void sw_reset(void);
 
     bool lock_multi_register_access(bool lock = true);
     bool set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent);

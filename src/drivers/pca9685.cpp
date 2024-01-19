@@ -59,16 +59,38 @@ bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
 
     LOG_DBG("PWM On = %d, Off = %d , val = %d", t_on, t_off, (uint32_t)duty_cycle_percent);
 
-    // lock_multi_register_access();
+    lock_multi_register_access();
 
     write_bytes(PCA9685_REG_LEDX_ON_L(pwm_port), (uint8_t*)&t_on, sizeof(t_on));
-
-    // write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
+    write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
 
     /* restart PWM */
-    // append_byte(PCA9685_REG_MODE_1, PCA9685_REG_MODE_1_RESTART(1u) | PCA9685_REG_MODE_1_AI_B(0u));
+    append_byte(PCA9685_REG_MODE_1, PCA9685_REG_MODE_1_RESTART(1u) | PCA9685_REG_MODE_1_AI_B(0u));
 
     return true;
+}
+
+/**
+ * @brief Do a software reset on the PCA9685 chip
+ * @param
+ */
+void pca9685::sw_reset(void)
+{
+    /* enqueue a read for register addr */
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (PCA9685_DEFAULT_I2C_ADDR_SWRST_7_BIT << 1u) | I2C_MASTER_WRITE, I2C_MASTER_ACK);
+    i2c_master_write_byte(cmd, 0x06u, I2C_MASTER_ACK);
+    i2c_master_stop(cmd);
+
+    /* get status of current address */
+    int ret = i2c_master_cmd_begin(_bus->port(), cmd, pdMS_TO_TICKS(_timeout_ms));
+    i2c_cmd_link_delete(cmd);
+    if (ret != ESP_OK) {
+        LOG_ERR("Failed SWRST : rc %d", ret);
+    }
+
+    LOG_DBG("Software reset done.");
 }
 
 /**
@@ -78,7 +100,7 @@ bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
 pca9685::pca9685(const std::shared_ptr<comm::i2c_master_bus>& _bus)
     : i2c_slave_device(_bus, "PCA9685", PCA9685_DEFAULT_I2C_ADDR_7_BIT, PCA9685_DEFAULT_I2C_TIMEOUT_MS)
 {
-    sleep(true);
+    sw_reset();
 }
 
 } // namespace drivers

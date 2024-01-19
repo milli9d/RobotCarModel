@@ -26,7 +26,7 @@ namespace comm {
 
 class i2c_slave_device
 {
-  private:
+  protected:
     std::shared_ptr<comm::i2c_master_bus> _bus{};
     std::string _name{};
     uint8_t _addr{};
@@ -38,15 +38,15 @@ class i2c_slave_device
                      const uint8_t& timeout_ms);
 
     /* Public API */
-    void reg_dump(uint8_t max_addr = UINT8_MAX);
     bool ping(void);
+    void reg_dump(uint8_t max_addr = UINT8_MAX);
 
     bool read_byte(const uint8_t& reg, uint8_t& val);
     bool write_byte(const uint8_t& reg, const uint8_t& val);
     bool append_byte(const uint8_t& reg, const uint8_t& val);
 
-    bool write_bytes(const uint8_t& reg, const uint8_t* val, size_t sz);
     bool read_bytes(const uint8_t& reg, uint8_t* val, size_t sz);
+    bool write_bytes(const uint8_t& reg, const uint8_t* val, size_t sz);
 
     bool write_byte_rb(const uint8_t& reg, const uint8_t& val, uint64_t rb_wait_ms);
 };
