@@ -1,5 +1,7 @@
 #include <iostream>
 #include <thread>
+#include <bitset>
+#include <cstdint>
 #include <chrono>
 
 #include "comm/i2c_master_bus.hpp"
@@ -27,9 +29,9 @@ bool pca9685::lock_multi_register_access(bool lock)
     }
 
     if (lock) {
-        utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
+        val = utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
     } else {
-        utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
+        val = utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
     }
 
     return write_byte(PCA9685_REG_MODE_1, val);
@@ -48,9 +50,9 @@ void pca9685::sleep(bool sleep)
     }
 
     if (sleep) {
-        utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
+        val = utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
     } else {
-        utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
+        val = utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
     }
 
     write_byte(PCA9685_REG_MODE_1, val);
@@ -72,28 +74,43 @@ bool pca9685::sleep(void)
     return (val & PCA9685_REG_MODE_1_SLEEP_B);
 }
 
+bool pca9685::set_freq(uint16_t freq_hz)
+{
+    std::cout << "MAX " << PCA9685_REG_PRE_SCALE_MAX_FREQ_HZ << " MIN " << PCA9685_REG_PRE_SCALE_MIN_FREQ_HZ
+              << std::endl;
+    std::cout << "RES " << PCA9685_PRE_SCALE_FREQ_HZ_RES << " PSCALE " << PCA9685_FREQ_HZ_TO_PRE_SCALE(50u)
+              << " PSCALE " << PCA9685_PRE_SCALE_TO_FREQ_HZ(121u) << std::endl;
+
+    return write_byte(PCA9685_REG_PRE_SCALE, PCA9685_FREQ_HZ_TO_PRE_SCALE(freq_hz));
+}
+
+/**
+ * @brief Set PWM output
+ * @param pwm_port
+ * @param duty_cycle_percent
+ * @return
+ */
 bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
 {
-    /* calculate time of PWM */
-    uint16_t t_on = (static_cast<uint16_t>(duty_cycle_percent) * static_cast<uint16_t>(PCA9685_REG_LED_VAL_MAX)) / 100u;
-    uint16_t t_off = (static_cast<uint16_t>(PCA9685_REG_LED_VAL_MAX) - t_on - 1u);
-
-    LOG_DBG("PWM On = %d, Off = %d , val = %d", t_on, t_off, (uint32_t)duty_cycle_percent);
-
-    lock_multi_register_access();
-
-    write_bytes(PCA9685_REG_LEDX_ON_L(pwm_port), (uint8_t*)&t_on, sizeof(t_on));
-    write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
-
-    /* restart PWM */
-    uint8_t val = 0u;
-    if (!read_byte(PCA9685_REG_MODE_1, val)) {
-        LOG_ERR("Failed read.");
+    /* sanity check */
+    if (duty_cycle_percent > 100u) {
+        LOG_ERR("PWM value out of range");
         return false;
     }
 
-    utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_RESTART_B | PCA9685_REG_MODE_1_AI_B);
-    write_byte(PCA9685_REG_MODE_1, val);
+    /* calculate time of PWM */
+    uint16_t t_on = 0u;
+    uint16_t t_off = ((duty_cycle_percent * (uint16_t)PCA9685_REG_LED_VAL_MAX) / 100u) & 0x00FFFFFFu;
+    LOG_DBG("PWM On = %d, Off = %d , val = %d", t_on, t_off, (uint32_t)duty_cycle_percent);
+
+    /* write PWM control registers */
+    lock_multi_register_access(true);
+
+    t_on = utils::set_bits<uint16_t>(t_on, PCA9685_REG_LEDX_ON_OFF_B << 8u);
+    write_bytes(PCA9685_REG_LEDX_ON_L(pwm_port), (uint8_t*)&t_on, sizeof(t_on));
+    write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
+
+    lock_multi_register_access(false);
 
     return true;
 }
@@ -118,7 +135,7 @@ void pca9685::sw_reset(void)
         LOG_ERR("Failed SWRST : rc %d", ret);
     }
 
-    LOG_DBG("Software reset done.");
+    LOG_INFO("Software reset done.");
 }
 
 /**
@@ -129,11 +146,20 @@ pca9685::pca9685(const std::shared_ptr<comm::i2c_master_bus>& _bus)
     : i2c_slave_device(_bus, "PCA9685", PCA9685_DEFAULT_I2C_ADDR_7_BIT, PCA9685_DEFAULT_I2C_TIMEOUT_MS)
 {
     sw_reset();
+    set_freq(50u);
 
-    set_pwm(0u, 50u);
-    set_pwm(1u, 50u);
+    uint8_t val = 0u;
+    if (read_byte(PCA9685_REG_MODE_2, val)) {
+        val = utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_2_OUTDRV_B);
+        write_byte(PCA9685_REG_MODE_2, val);
+    }
 
-    sleep(false);
+    for (int i = 0; i <= 100u; i++) {
+        sleep(true);
+        set_pwm(0u, i);
+        sleep(false);
+        std::this_thread::sleep_for(std::chrono::milliseconds(250u));
+    }
 }
 
 } // namespace drivers

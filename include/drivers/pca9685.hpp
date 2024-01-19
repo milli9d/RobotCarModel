@@ -32,6 +32,8 @@ class pca9685 : protected comm::i2c_slave_device
 
     bool lock_multi_register_access(bool lock = true);
     bool set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent);
+    bool set_freq(uint16_t freq);
+
 };
 
 } // namespace drivers

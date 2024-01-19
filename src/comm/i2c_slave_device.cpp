@@ -109,7 +109,6 @@ bool i2c_slave_device::write_byte_rb(const uint8_t& reg, const uint8_t& val, uin
         LOG_ERR("Failed Readback!");
     }
 
-    LOG_DBG("RB = 0x%X Rg = 0x%X", val_rb, val);
     return false;
 }
 
@@ -136,7 +135,6 @@ bool i2c_slave_device::read_bytes(const uint8_t& reg, uint8_t* val, size_t sz)
     for (size_t i = 0u; i < sz; i++) {
         i2c_ack_type_t ack = (i == (sz - 1u)) ? I2C_MASTER_NACK : I2C_MASTER_ACK;
         i2c_master_read_byte(cmd, &val[i], ack);
-        LOG_DBG("READ QUEUED for ADDR 0x%X , Reg = 0x%X, Val = %p", _addr, curr_addr++, val[i]);
     }
 
     i2c_master_stop(cmd);
@@ -170,8 +168,6 @@ bool i2c_slave_device::write_bytes(const uint8_t& reg, const uint8_t* val, size_
     /* enqueue bytes */
     for (size_t i = 0u; i < sz; i++) {
         i2c_master_write_byte(cmd, val[i], I2C_MASTER_ACK);
-        LOG_DBG("Write %s [0x%X] addr Reg 0x%X  Val 0x%X", _name.c_str(), _addr, reg + i, val[i]);
-        std::cout << "WRITING : 0b" << std::bitset<8u>(val[i]) << std::endl;
     }
 
     i2c_master_stop(cmd);

@@ -40,6 +40,9 @@
 #define PCA9685_REG_LEDX_OFF_L(i)            (PCA9685_REG_LEDX_BASE(i) + 2u)
 #define PCA9685_REG_LEDX_OFF_H(i)            (PCA9685_REG_LEDX_BASE(i) + 3u)
 
+#define PCA9685_REG_LEDX_H(x)                (x << 0u)
+#define PCA9685_REG_LEDX_ON_OFF_B            (1u << 4u)
+
 /* ALL_LED registers */
 #define PCA9685_REG_ALL_LEDX_BASE_ADDR       (0xFAu)
 
@@ -47,4 +50,21 @@
 #define PCA9685_REG_ALL_LEDX_ON_H            (PCA9685_REG_ALL_LEDX_BASE_ADDR + 1u)
 #define PCA9685_REG_ALL_LEDX_OFF_L           (PCA9685_REG_ALL_LEDX_BASE_ADDR + 2u)
 #define PCA9685_REG_ALL_LEDX_OFF_H           (PCA9685_REG_ALL_LEDX_BASE_ADDR + 3u)
-#define PCA9685_REG_PRE_SCALE                (PCA9685_REG_ALL_LEDX_BASE_ADDR + 4u)
+
+/* Pre-Scaler Register */
+
+#define PCA9685_REG_PRE_SCALE                (0xFEu)
+#define PCA9685_REG_PRE_SCALE_MIN            (0x03u)
+#define PCA9685_REG_PRE_SCALE_MAX            (0xFFu)
+
+#define PCA9685_INT_CLK_FREQ_HZ              (25u * 1000u * 1000u)
+
+#define PCA9685_CLK_FREQ_HZ                  (PCA9685_INT_CLK_FREQ_HZ)
+
+#define PCA9685_PRE_SCALE_FREQ_HZ_RES        (PCA9685_CLK_FREQ_HZ / 4096u)
+
+#define PCA9685_FREQ_HZ_TO_PRE_SCALE(x)      ((PCA9685_CLK_FREQ_HZ / (4096u * x)) - 1u)
+#define PCA9685_PRE_SCALE_TO_FREQ_HZ(x)      (PCA9685_CLK_FREQ_HZ / (4096u * (x + 1u)))
+
+#define PCA9685_REG_PRE_SCALE_MAX_FREQ_HZ    ((PCA9685_CLK_FREQ_HZ / (4096u * (PCA9685_REG_PRE_SCALE_MIN + 1u))) + 1u)
+#define PCA9685_REG_PRE_SCALE_MIN_FREQ_HZ    ((PCA9685_CLK_FREQ_HZ / (4096u * (PCA9685_REG_PRE_SCALE_MAX + 1u))) + 1u)
