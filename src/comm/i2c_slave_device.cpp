@@ -84,28 +84,6 @@ bool i2c_slave_device::write_byte(const uint8_t& reg, const uint8_t& val)
 }
 
 /**
- * @brief Write a byte to this device
- * @param reg[in]       reg address
- * @param val[in]       memory to write from
- * @return
- */
-bool i2c_slave_device::append_byte(const uint8_t& reg, const uint8_t& val)
-{
-    /* read the current value of the register */
-    uint8_t rb = 0u;
-    if (!read_byte(reg, rb)) {
-        LOG_ERR("failed to read byte at 0x%X", reg);
-        return false;
-    }
-
-    std::cout << "Append VAL = " << std::bitset<8u>(rb) << " RB = " << std::bitset<8u>(val)
-              << " OUT = " << std::bitset<8u>(rb | val) << std::endl;
-
-    /* clear and write the bits from input value to read value */
-    return write_byte(reg, rb | val);
-}
-
-/**
  * @brief Write a byte and read back to verify
  * @param reg[in]           reg address
  * @param val[in]           memory to write from
@@ -115,7 +93,7 @@ bool i2c_slave_device::append_byte(const uint8_t& reg, const uint8_t& val)
 bool i2c_slave_device::write_byte_rb(const uint8_t& reg, const uint8_t& val, uint64_t rb_wait_ms)
 {
     /* write, wait and read back to verify */
-    append_byte(reg, val);
+    write_byte(reg, val);
     std::this_thread::sleep_for(std::chrono::milliseconds(rb_wait_ms));
 
     /* attempt readback */

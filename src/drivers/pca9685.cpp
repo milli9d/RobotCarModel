@@ -7,6 +7,8 @@
 #include "drivers/pca9685.hpp"
 #include "drivers/pca9685_reg.hpp"
 
+#include "utils/common_lib.hpp"
+
 #include "logging.h"
 LOG_TAG(PCA9685);
 
@@ -18,7 +20,19 @@ namespace drivers {
  */
 bool pca9685::lock_multi_register_access(bool lock)
 {
-    return append_byte(PCA9685_REG_MODE_1, PCA9685_REG_MODE_1_AI_B((int)lock));
+    uint8_t val = 0u;
+    if (!read_byte(PCA9685_REG_MODE_1, val)) {
+        LOG_ERR("Failed read.");
+        return false;
+    }
+
+    if (lock) {
+        utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
+    } else {
+        utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_AI_B);
+    }
+
+    return write_byte(PCA9685_REG_MODE_1, val);
 }
 
 /**
@@ -27,12 +41,19 @@ bool pca9685::lock_multi_register_access(bool lock)
  */
 void pca9685::sleep(bool sleep)
 {
-    /* try a read back write */
-    if (write_byte_rb(PCA9685_REG_MODE_1, PCA9685_REG_MODE_1_SLEEP_B(sleep ? 1u : 0u), 100u)) {
-        LOG_DBG("PCA9685 Sleep %s", ((sleep == 1u) ? "enabled" : "disabled"));
-    } else {
-        LOG_ERR("ERROR: writing sleep mode failed");
+    uint8_t val = 0u;
+    if (!read_byte(PCA9685_REG_MODE_1, val)) {
+        LOG_ERR("Failed read.");
+        return;
     }
+
+    if (sleep) {
+        utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
+    } else {
+        utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_SLEEP_B);
+    }
+
+    write_byte(PCA9685_REG_MODE_1, val);
 }
 
 /**
@@ -48,7 +69,7 @@ bool pca9685::sleep(void)
     }
 
     /* compare bit */
-    return (val & PCA9685_REG_MODE_1_SLEEP_B(1u));
+    return (val & PCA9685_REG_MODE_1_SLEEP_B);
 }
 
 bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
@@ -65,7 +86,14 @@ bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
     write_bytes(PCA9685_REG_LEDX_OFF_L(pwm_port), (uint8_t*)&t_off, sizeof(t_off));
 
     /* restart PWM */
-    append_byte(PCA9685_REG_MODE_1, PCA9685_REG_MODE_1_RESTART(1u) | PCA9685_REG_MODE_1_AI_B(0u));
+    uint8_t val = 0u;
+    if (!read_byte(PCA9685_REG_MODE_1, val)) {
+        LOG_ERR("Failed read.");
+        return false;
+    }
+
+    utils::clear_bits<uint8_t>(val, PCA9685_REG_MODE_1_RESTART_B | PCA9685_REG_MODE_1_AI_B);
+    write_byte(PCA9685_REG_MODE_1, val);
 
     return true;
 }
@@ -101,6 +129,11 @@ pca9685::pca9685(const std::shared_ptr<comm::i2c_master_bus>& _bus)
     : i2c_slave_device(_bus, "PCA9685", PCA9685_DEFAULT_I2C_ADDR_7_BIT, PCA9685_DEFAULT_I2C_TIMEOUT_MS)
 {
     sw_reset();
+
+    set_pwm(0u, 50u);
+    set_pwm(1u, 50u);
+
+    sleep(false);
 }
 
 } // namespace drivers

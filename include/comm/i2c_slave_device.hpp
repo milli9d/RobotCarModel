@@ -43,7 +43,6 @@ class i2c_slave_device
 
     bool read_byte(const uint8_t& reg, uint8_t& val);
     bool write_byte(const uint8_t& reg, const uint8_t& val);
-    bool append_byte(const uint8_t& reg, const uint8_t& val);
 
     bool read_bytes(const uint8_t& reg, uint8_t* val, size_t sz);
     bool write_bytes(const uint8_t& reg, const uint8_t* val, size_t sz);

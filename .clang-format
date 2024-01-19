@@ -1,7 +1,10 @@
 ---
 Language: Cpp
 BasedOnStyle: llvm
-AlignConsecutiveMacros: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
 AlignOperands: true
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
