@@ -56,6 +56,7 @@ void pca9685::sleep(bool sleep)
     }
 
     write_byte(PCA9685_REG_MODE_1, val);
+    LOG_DBG("%s Sleep = %s", _name.c_str(), sleep ? "enable" : "disable");
 }
 
 /**
@@ -78,8 +79,8 @@ bool pca9685::set_freq(uint16_t freq_hz)
 {
     std::cout << "MAX " << PCA9685_REG_PRE_SCALE_MAX_FREQ_HZ << " MIN " << PCA9685_REG_PRE_SCALE_MIN_FREQ_HZ
               << std::endl;
-    std::cout << "RES " << PCA9685_PRE_SCALE_FREQ_HZ_RES << " PSCALE " << PCA9685_FREQ_HZ_TO_PRE_SCALE(50u)
-              << " PSCALE " << PCA9685_PRE_SCALE_TO_FREQ_HZ(121u) << std::endl;
+    std::cout << "RES " << PCA9685_PRE_SCALE_FREQ_HZ_RES << " PSCALE " << PCA9685_FREQ_HZ_TO_PRE_SCALE(freq_hz)
+              << " PSCALE " << PCA9685_PRE_SCALE_TO_FREQ_HZ(PCA9685_FREQ_HZ_TO_PRE_SCALE(freq_hz)) << std::endl;
 
     return write_byte(PCA9685_REG_PRE_SCALE, PCA9685_FREQ_HZ_TO_PRE_SCALE(freq_hz));
 }
@@ -103,6 +104,18 @@ bool pca9685::set_pwm(uint8_t pwm_port, uint8_t duty_cycle_percent)
     uint16_t t_off = ((duty_cycle_percent * (uint16_t)PCA9685_REG_LED_VAL_MAX) / 100u) & 0x00FFFFFFu;
     LOG_DBG("PWM On = %d, Off = %d , val = %d", t_on, t_off, (uint32_t)duty_cycle_percent);
 
+    set_pwm(pwm_port, t_on, t_off);
+    return true;
+}
+
+/**
+ * @brief Set PWM output
+ * @param pwm_port
+ * @param duty_cycle_percent
+ * @return
+ */
+bool pca9685::set_pwm(uint8_t pwm_port, uint16_t t_on, uint16_t t_off)
+{
     /* write PWM control registers */
     lock_multi_register_access(true);
 
@@ -149,16 +162,18 @@ pca9685::pca9685(const std::shared_ptr<comm::i2c_master_bus>& _bus)
     set_freq(50u);
 
     uint8_t val = 0u;
-    if (read_byte(PCA9685_REG_MODE_2, val)) {
-        val = utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_2_OUTDRV_B);
-        write_byte(PCA9685_REG_MODE_2, val);
+    if (read_byte(PCA9685_REG_MODE_1, val)) {
+        val = utils::set_bits<uint8_t>(val, PCA9685_REG_MODE_1_RESTART_B);
+        write_byte(PCA9685_REG_MODE_1, val);
     }
 
-    for (int i = 0; i <= 100u; i++) {
+    for (uint16_t i = 0u; i <= 4096u; i += 10u) {
         sleep(true);
-        set_pwm(0u, i);
+        LOG_DBG("T_off = %ld", i);
+        set_pwm(0u, 0u, i);
+        // set_pwm(9u, 0u, 4095u - i);
         sleep(false);
-        std::this_thread::sleep_for(std::chrono::milliseconds(250u));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50u));
     }
 }
 
